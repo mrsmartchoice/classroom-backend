@@ -9,10 +9,11 @@ router.get("/", async (req, res) => {
     try {
         const { search, department, page = 1, limit = 10 } = req.query;  
 
-        const currentPage = Math.max(1, +page);
-        const limitPerPage = Math.max(1, +limit)
+        const currentPage = Math.max(1, parseInt(String(page), 10)|| 1);
+        const limitPerPage = Math.max(1, parseInt(String(limit),10)||10,100)
 
         const offset = (currentPage - 1) * limitPerPage; 
+        
         const filterConditions: any[] = [];
 
         // ifsearch query is provided, add a condition to filter subjects by name or code
@@ -27,11 +28,11 @@ router.get("/", async (req, res) => {
 
         //if department filter exist
         if (department) {
-            filterConditions.push(
-                ilike(departments.name, `%${department}%`)
+            const deptPattern =`%${String(department).replace(/[%_]/g,'\\$&')}%`
+            filterConditions.push(ilike(departments.name, deptPattern)
             )
         }
-
+        
         // combine All filters Using  AND if exist
         const whereClause = filterConditions.length > 0 ? and( ... filterConditions) : undefined;
         
